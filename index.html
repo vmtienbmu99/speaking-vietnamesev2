@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nói để nhảy · Speak to Jump</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#dfeceb;--ink:#12332f;--mute:#587571;--panel:#f7fbfa;--line:#b9d1ce;--ok:#17855a;--bad:#c93232;--hat:#d9a93f;--btn:#12332f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Be Vietnam Pro",system-ui,Arial,sans-serif}
+main{max-width:680px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;font-weight:800;margin:0 0 12px;letter-spacing:-.2px}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:14px;color:var(--mute);margin-bottom:12px}
+button.link{background:none;color:var(--mute);text-decoration:underline;padding:0;min-height:0;font-size:13px;font-weight:600}
+button.small{padding:6px 14px;min-height:36px;font-size:14px}
+.who{display:flex;gap:12px;align-items:center;flex-wrap:wrap;width:100%;color:var(--ink);font-weight:600}
+.modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:34px 16px 16px;background:rgba(9,28,26,.74);overflow:auto}
+.card{position:relative;width:min(440px,100%);background:linear-gradient(#17413b,#0f2b27);color:#eef7f4;border:1px solid #2f6b62;border-radius:18px;padding:26px 18px 18px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.card h2{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);margin:0;white-space:nowrap;padding:8px 26px;background:var(--hat);color:#2b1f05;border-radius:999px;font-size:17px;font-weight:800;letter-spacing:.5px}
+.card p{margin:10px 0 6px;color:#bcd8d2}
+#nameInput{width:100%;font:inherit;font-size:18px;padding:12px 14px;border-radius:10px;border:2px solid #2f6b62;background:#0f2b27;color:#fff;margin:8px 0 14px;text-align:center}
+#nameInput.bad{border-color:#ff7b7b}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:16px;margin:6px 0 10px}
+.pod{display:grid;justify-items:center;gap:3px;max-width:92px;font-size:12px}
+.pod .pn{max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#bcd8d2}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:#2d6fb7;border:3px solid #6aa7e6;color:#fff}
+.pod.p1 .av{width:60px;height:60px;font-size:22px;border-color:#f0c24b}
+.medal{font-size:12px;font-weight:800;padding:0 8px;border-radius:999px;color:#2b1f05;background:#c9ced3}
+.p1 .medal{background:#f0c24b}.p3 .medal{background:#d08a4a}
+.lb-row{display:grid;grid-template-columns:34px 36px 1fr auto;align-items:center;gap:8px;padding:8px 14px;margin:8px 0;border-radius:999px;background:#1d4a44;text-align:left}
+.lb-row .rk{font-weight:800;font-size:18px}
+.lb-row.r1 .rk{color:#f0c24b}.lb-row.r2 .rk{color:#c9ced3}.lb-row.r3 .rk{color:#d08a4a}
+.lb-row .av{width:34px;height:34px;font-size:15px;background:#e9b44c;border-color:#f6d78b;color:#4a3410}
+.lb-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.lb-row .sc{font-variant-numeric:tabular-nums;font-weight:800}
+.lb-row.fade{-webkit-mask-image:linear-gradient(#000,rgba(0,0,0,.08));mask-image:linear-gradient(#000,rgba(0,0,0,.08))}
+.lb-row.me{outline:2px solid #8be0b4;background:#245a52}
+.dots{letter-spacing:6px;color:#8fb6ae;line-height:.5;margin:2px 0}
+#lbClose,#nameOk{margin-top:10px}
+.help{font-size:12px;line-height:1.5;color:var(--mute);margin:-4px 0 12px}
+.bar select{font:inherit;color:var(--ink);padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.bar .sc{margin-left:auto;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+canvas{display:block;width:100%;height:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+#panel{margin-top:14px;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;text-align:center}
+#status{min-height:22px;font-size:14px;font-weight:600;color:var(--mute)}
+#status.on{color:var(--ok)}#status.err{color:var(--bad)}
+#sent{font-size:clamp(26px,6vw,38px);font-weight:800;line-height:1.3;margin:8px 0 4px;letter-spacing:-.4px}
+.w{display:inline-block;margin:0 .13em;padding:0 .08em;border-radius:6px;transition:color .15s,background .15s}
+.w.ok{color:var(--ok)}
+.w.bad{color:var(--bad);background:#fbe0e0;text-decoration:underline wavy var(--bad) 2px;text-underline-offset:5px}
+#en{color:var(--mute);margin:0 0 10px;min-height:24px}
+#heard{min-height:24px;margin:0 0 12px;font-size:15px;color:var(--mute);overflow-wrap:anywhere}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+button{font:600 16px inherit;font-family:inherit;border:0;border-radius:10px;padding:11px 20px;cursor:pointer;background:var(--btn);color:#fff;min-height:46px}
+button.alt{background:#e3eeec;color:var(--ink)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #e0b24c;outline-offset:2px}
+#msg{margin-top:12px;padding:10px 14px;border-radius:10px;background:#fbe8d0;color:#6a3d0b;font-size:14px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main id="app">
+<h1>Nói để nhảy · Speak to Jump</h1>
+<div class="bar">
+  <span class="who"><span id="hello"></span><button id="rename" class="link">Đổi tên / Change name</button><button id="lbBtn" class="alt small" hidden>🏆 Xếp hạng / Ranking</button></span>
+  <label>Chủ đề / Topic: <select id="pack"></select></label>
+  <label><input type="checkbox" id="tone"> Bỏ qua dấu thanh / Ignore tones</label>
+  <label>Chế độ / Mode: <select id="lvl"><option value="practice">Luyện tập / Practice</option><option value="challenge">Thử thách / Challenge</option></select></label>
+  <label>Giọng mẫu / Voice: <select id="voice"><option value="bac">Miền Bắc / North</option><option value="trung">Miền Trung / Central</option><option value="nam">Miền Nam / South</option><option value="sys">Giọng máy / Device voice</option></select></label>
+  <label><select id="gender"><option value="f">Giọng nữ / Female</option><option value="m">Giọng nam / Male</option></select></label>
+  <span class="sc"><span id="stg"></span> · Điểm <span id="score">0</span> · Cao nhất <span id="best">0</span></span>
+</div>
+<p class="help">Độ khó tăng dần từ 1 đến 5 (mỗi độ khó 5 câu bốc ngẫu nhiên); tới độ khó 5 thì chơi không giới hạn. <b>Luyện tập:</b> nghe mẫu trước khi nói, thử lại không giới hạn, không thua. <b>Thử thách:</b> không nghe trước, nói sai là thua, thi điểm cao.<br>Levels rise from 1 to 5 (5 random sentences each); level 5 never ends. <b>Practice:</b> hear the sentence first, unlimited retries, no game over. <b>Challenge:</b> no preview, one mistake ends the run, chase a high score.</p>
+<canvas id="c" aria-label="Màn chơi"></canvas>
+<section id="panel">
+  <div id="status" aria-live="polite">Bấm Bắt đầu để chơi / Press Start</div>
+  <p id="sent"></p>
+  <p id="en"></p>
+  <p id="heard"></p>
+  <div class="row">
+    <button id="play" class="alt" disabled>🔊 Nghe lại / Listen again</button>
+    <button id="retry" class="alt" hidden>↻ Thử lại / Try again</button>
+    <button id="skip" class="alt" hidden>Bỏ qua câu này / Skip →</button>
+    <button id="go">Bắt đầu / Start</button>
+  </div>
+</section>
+<p id="msg" hidden></p>
+<p style="margin-top:18px;font-size:12px;color:var(--mute)">Nhận giọng chạy ngay trên máy bạn, không gửi âm thanh đi đâu. Mô hình: hynt/Zipformer-30M-RNNT-6000h (CC BY-NC-ND 4.0, chỉ dùng phi thương mại); k2-fsa/sherpa-onnx; onnxruntime-web. Giọng đọc mẫu: VieNeu-TTS v3 Turbo (Apache-2.0). / Speech recognition runs on your device; audio is not uploaded.</p>
+</main>
+<div id="nameModal" class="modal" hidden>
+  <div class="card" role="dialog" aria-labelledby="nameTitle">
+    <h2 id="nameTitle">Xin chào! · Welcome</h2>
+    <p>Nhập tên của bạn để bắt đầu<br>Enter your name to begin</p>
+    <input id="nameInput" maxlength="30" autocomplete="off" placeholder="Tên của bạn / Your name">
+    <button id="nameOk">Bắt đầu / Continue</button>
+  </div>
+</div>
+<div id="lbModal" class="modal" hidden>
+  <div class="card" role="dialog" aria-labelledby="lbTitle">
+    <h2 id="lbTitle">BẢNG XẾP HẠNG</h2>
+    <div id="lbBody"></div>
+    <button id="lbClose" class="alt">ĐÓNG / CLOSE</button>
+  </div>
+</div>
+<script type="module">
+import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.min.mjs';
+import { Recognizer } from './asr.mjs';
+import { SHEET_URL, DASHBOARD_URL, TOP_N, PER_STAGE, LEVEL_MAX_WORDS, TIMING } from './config.js';   // mọi cấu hình chỉnh trong config.js
+const autoLevel = v => { const n = v.trim().split(/\s+/).length, i = LEVEL_MAX_WORDS.findIndex(m => n <= m); return i < 0 ? 5 : i + 1; };
+
+// Các gói câu (chủ đề) được đọc từ Google Sheet, cột chu_de.
+const PACKS = {};
+
+// ===== TIỆN ÍCH =====
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const note = t => { $('msg').textContent = t; $('msg').hidden = !t; };
+
+function toks(s) {
+  s = s.normalize('NFC').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ');
+  if ($('tone').checked) s = s.normalize('NFD').replace(/[\u0300\u0301\u0303\u0309\u0323]/g, '').normalize('NFC');
+  return s.split(/\s+/).filter(Boolean);
+}
+// Căn chỉnh từng từ: trả về mảng 1 (đúng) / 0 (sai hoặc thiếu) cho mỗi từ của câu mẫu
+function align(exp, got) {
+  const n = exp.length, m = got.length, d = Array.from({length: n + 1}, () => Array(m + 1).fill(0));
+  for (let i = n; i >= 0; i--) for (let j = m; j >= 0; j--)
+    d[i][j] = i == n ? m - j : j == m ? n - i : Math.min(d[i+1][j+1] + (exp[i] == got[j] ? 0 : 1), d[i+1][j] + 1, d[i][j+1] + 1);
+  const st = Array(n).fill(0); let i = 0, j = 0;
+  while (i < n) {
+    if (j < m && exp[i] == got[j] && d[i][j] == d[i+1][j+1]) { st[i] = 1; i++; j++; }
+    else if (j < m && d[i][j] == d[i+1][j+1] + 1) { i++; j++; }
+    else if (d[i][j] == d[i+1][j] + 1) i++;
+    else j++;
+  }
+  return st;
+}
+function csv(t) {
+  const r = []; let row = [], c = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch == '"') { if (t[i+1] == '"') { c += '"'; i++; } else q = false; } else c += ch; }
+    else if (ch == '"') q = true;
+    else if (ch == ',') { row.push(c); c = ''; }
+    else if (ch == '\n' || ch == '\r') { if (ch == '\r' && t[i+1] == '\n') i++; row.push(c); r.push(row); row = []; c = ''; }
+    else c += ch;
+  }
+  if (c || row.length) { row.push(c); r.push(row); }
+  return r;
+}
+function fillPacks() {
+  const keep = $('pack').value;
+  $('pack').replaceChildren(new Option('Tất cả / All', '*'), ...Object.keys(PACKS).map(k => new Option(k, k)));
+  if (keep && [...$('pack').options].some(o => o.value == keep)) $('pack').value = keep;
+}
+function sheetUrls(u) {
+  const m = u.match(/\/spreadsheets\/d\/([\w-]+)/);
+  if (!m || /\/pub\?|output=csv/.test(u)) return [u];            // link CSV xuất bản: dùng nguyên
+  const id = m[1], gid = (u.match(/[#&?]gid=(\d+)/) || [])[1], g = gid ? '&gid=' + gid : '';
+  return [`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv${g}`, `https://docs.google.com/spreadsheets/d/${id}/export?format=csv${g}`];
+}
+async function loadSheet() {
+  if (SHEET_URL) {
+    let text = null;
+    for (const url of sheetUrls(SHEET_URL)) {
+      try { const r = await fetch(url); const t = await r.text(); if (r.ok && !t.trimStart().startsWith('<')) { text = t; break; } } catch (e) {}
+    }
+    if (text == null) note('Không đọc được Google Sheet (kiểm tra chế độ chia sẻ: bất kỳ ai có link đều xem được). Đang dùng gói có sẵn. / Could not read the Google Sheet.');
+    else csv(text).slice(1).forEach(([p, v, e, d]) => { p = (p || '').trim(); v = (v || '').trim(); const lv = parseInt(d, 10); if (p && v) (PACKS[p] = PACKS[p] || []).push([v, (e || '').trim(), lv >= 1 && lv <= 5 ? lv : autoLevel(v)]); });
+  }
+  fillPacks();
+}
+
+// ===== TRÒ CHƠI =====
+const cv = $('c'), ctx = cv.getContext('2d');
+const W = 600, H = 190, GY = 150, HX = 90, SPEED = 220, STOP = 90, JT = 1, JH = 78, POLE = 44;
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+cv.width = W * dpr; cv.height = H * dpr; ctx.scale(dpr, dpr);
+let state = 'idle', obs = [], cur = null, exp = [], st = [], deck = [], score = 0, off = 0, jt = 0, timer = 0, rec = null, last = 0, practiceMode = true, lastSec = -1, wmap = [];
+let best = 0; try { best = +localStorage.getItem('ndn-best') || 0; } catch (e) {}
+$('best').textContent = best;
+
+let used = new Set(), made = 0;
+const pool = () => $('pack').value == '*' ? Object.values(PACKS).flat() : PACKS[$('pack').value] || [];
+const levelOf = k => Math.min(5, Math.floor(k / PER_STAGE) + 1);
+function nearestLevel(w) { for (let d = 0; d < 5; d++) for (const l of [w + d, w - d]) if (l >= 1 && l <= 5 && pool().some(p => p[2] == l)) return l; return null; }
+function nextS() {
+  const k = made++, stage = levelOf(k), lv = nearestLevel(stage);   // nếu độ khó này chưa có câu thì lấy độ khó gần nhất
+  let c = pool().filter(p => p[2] == lv && !used.has(p[0]));
+  if (!c.length) { pool().filter(p => p[2] == lv).forEach(p => used.delete(p[0])); c = pool().filter(p => p[2] == lv); }   // hết câu thì xáo lại
+  const [v, en] = c[(Math.random() * c.length) | 0]; used.add(v);
+  return {v, en, k, stage};
+}
+function status(t, cls) { $('status').textContent = t; $('status').className = cls || ''; }
+
+function render() {
+  const words = cur.v.trim().split(/\s+/);
+  exp = []; wmap = [];
+  words.forEach(w => { const t = toks(w); wmap.push([exp.length, exp.length + t.length]); exp.push(...t); });
+  st = exp.map(() => 0);
+  $('sent').replaceChildren(...words.map(w => Object.assign(document.createElement('span'), {className: 'w', textContent: w})));
+  $('en').textContent = cur.en; $('heard').textContent = '';
+  const k = cur.k || 0;
+  $('stg').textContent = state == 'idle' ? '' : (k >= PER_STAGE * 4 ? `Độ khó 5/5 · không giới hạn · câu ${k - PER_STAGE * 4 + 1}` : `Độ khó ${cur.stage}/5 · câu ${k % PER_STAGE + 1}/${PER_STAGE}`) + ` · ${words.length} từ`;
+  $('play').disabled = true; $('retry').hidden = true; $('skip').hidden = true;
+}
+function paint(flags, finalFail) {
+  [...$('sent').children].forEach((el, i) => {
+    const [a, b] = wmap[i] || [0, 0]; let ok = true; for (let k = a; k < b; k++) if (!flags[k]) ok = false;
+    el.className = 'w' + (b > a && ok ? ' ok' : b > a && finalFail ? ' bad' : '');
+  });
+}
+const allow = () => practiceMode && exp.length >= 4 ? 1 : 0;
+function evaluate(alts) {
+  let b = null;
+  for (const a of alts) { const f = align(exp, toks(a)), n = f.reduce((x, y) => x + y, 0); if (!b || n > b.n) b = {s: f, n, text: a}; }
+  return {st: b.s, all: exp.length - b.n <= allow(), text: b.text};
+}
+
+// ===== NHẬN GIỌNG CỤC BỘ (hynt/Zipformer-30M-RNNT-6000h chạy bằng onnxruntime-web) =====
+const MODEL = './models/vi/', PARTS = {'encoder.int8.onnx': 3};
+let recog = null, micCtx = null, listening = false, seg = null, pre = [], busy = false, wantFinal = false, floor = 0.004, acc = [], accLen = 0;
+async function loadFile(n) {
+  const names = PARTS[n] ? Array.from({length: PARTS[n]}, (_, i) => `${n}.${String(i + 1).padStart(3, '0')}`) : [n];
+  const bufs = await Promise.all(names.map(async f => { const r = await fetch(MODEL + f); if (!r.ok) throw new Error('Thiếu file mô hình: ' + f); return new Uint8Array(await r.arrayBuffer()); }));
+  const out = new Uint8Array(bufs.reduce((s, b) => s + b.length, 0)); let o = 0;
+  bufs.forEach(b => { out.set(b, o); o += b.length; });
+  return out.buffer;
+}
+async function initAudio() {
+  const stream = await navigator.mediaDevices.getUserMedia({audio: {channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true}});
+  micCtx = new AudioContext({sampleRate: 16000}); await micCtx.resume();
+  const code = 'registerProcessor("cap",class extends AudioWorkletProcessor{process(i){const c=i[0][0];if(c)this.port.postMessage(c.slice());return true}})';
+  const url = URL.createObjectURL(new Blob([code], {type: 'text/javascript'}));
+  await micCtx.audioWorklet.addModule(url); URL.revokeObjectURL(url);
+  const node = new AudioWorkletNode(micCtx, 'cap'), mute = micCtx.createGain(); mute.gain.value = 0;
+  micCtx.createMediaStreamSource(stream).connect(node); node.connect(mute); mute.connect(micCtx.destination);
+  node.port.onmessage = e => {
+    acc.push(e.data); accLen += e.data.length;
+    if (accLen >= 1600) { const ch = new Float32Array(accLen); let o = 0; acc.forEach(a => { ch.set(a, o); o += a.length; }); acc = []; accLen = 0; onChunk(ch); }
+  };
+}
+function onChunk(ch) {
+  let e = 0; for (const s of ch) e += s * s;
+  const rms = Math.sqrt(e / ch.length), voiced = rms > Math.max(0.01, floor * 3);
+  if (!voiced) floor = floor * 0.95 + rms * 0.05;
+  if (!listening) return;
+  if (!seg) {
+    pre.push(ch); if (pre.length > 3) pre.shift();
+    if (!voiced) return;
+    const len = pre.reduce((s, c) => s + c.length, 0);
+    seg = {chunks: pre, len, lastVoice: len, lastDec: 0, final: false}; pre = [];
+  } else { seg.chunks.push(ch); seg.len += ch.length; if (voiced) seg.lastVoice = seg.len; }
+  if (seg.final) return;
+  if (seg.len - seg.lastVoice >= TIMING.pause * 16000 || seg.len >= TIMING.maxSpeech * 16000) { seg.final = true; runDecode(true); }   // im lặng đủ lâu = nói xong
+  else if (seg.len - seg.lastDec >= 9600) runDecode(false);                                              // nhận tạm mỗi 0,6 giây
+}
+async function runDecode(final) {
+  if (busy) { if (final) wantFinal = true; return; }
+  const s = seg; if (!s) return;
+  busy = true; s.lastDec = s.len;
+  const all = new Float32Array(s.len); let o = 0; s.chunks.forEach(c => { all.set(c, o); o += c.length; });
+  let txt = ''; try { txt = await recog.decode(all); } catch (e) { console.error(e); }
+  busy = false;
+  if (state != 'waiting' || seg !== s) return;
+  if (final && !txt) { seg = null; pre = []; return; }   // chỉ là tiếng ồn: tiếp tục nghe
+  handle(txt, final);
+  if (wantFinal && state == 'waiting' && seg === s && !final) { wantFinal = false; runDecode(true); }
+}
+function handle(txt, final) {
+  if (!txt) return;
+  const ev = evaluate([txt]);
+  $('heard').textContent = '“' + ev.text + '”'; st = ev.st; paint(st, false);
+  if (ev.all) succeed(); else if (final) fail(ev.st, 'Chưa đúng / Not quite');
+}
+function listen() { seg = null; pre = []; wantFinal = false; listening = true; }
+function stopRec() { listening = false; seg = null; pre = []; }
+
+function succeed(skipped) {
+  stopRec(); state = 'jumping'; jt = 0;
+  $('play').disabled = true; $('retry').hidden = true; $('skip').hidden = true;
+  if (skipped) status('Bỏ qua câu này / Skipped');
+  else { score++; $('score').textContent = score; paint(exp.map(() => 1), false); status('Chính xác! / Correct!', 'on'); }
+  obs.push({x: W + 40, s: nextS()});
+}
+let voiceWarned = false;
+const viVoice = () => window.speechSynthesis && speechSynthesis.getVoices().find(v => /^vi/i.test(v.lang));
+function speakSystem(text, done) {
+  if (!viVoice()) {
+    if (!voiceWarned) { voiceWarned = true; note('Chưa có audio mẫu cho câu này và máy không có giọng đọc tiếng Việt, nên bỏ qua phần nghe mẫu. / No audio sample and no Vietnamese voice on this device.'); }
+    if (done) done(); return;
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text); u.voice = viVoice(); u.lang = 'vi-VN'; u.rate = .85;
+  let fin = false; const end = () => { if (!fin) { fin = true; clearTimeout(t); if (done) done(); } };
+  const t = setTimeout(end, 6000 + text.length * 150);   // đề phòng trình duyệt không báo "đọc xong"
+  u.onend = u.onerror = end; speechSynthesis.speak(u);
+}
+// Tên file audio = 12 ký tự đầu của SHA-1 của câu đã chuẩn hóa (cùng công thức với tools/gen_audio.py)
+async function keyOf(t) {
+  const n = t.normalize('NFC').toLowerCase().split(/\s+/).filter(Boolean).join(' ');
+  const h = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(n));
+  return [...new Uint8Array(h)].slice(0, 6).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+let curAudio = null;
+function stopAudio() { if (curAudio) { curAudio.onended = curAudio.onerror = curAudio.onplaying = null; curAudio.pause(); curAudio = null; } if (window.speechSynthesis) speechSynthesis.cancel(); }
+function playFile(url, done) {
+  return new Promise(resolve => {
+    const a = new Audio(url); curAudio = a; let fin = false;
+    const end = () => { if (!fin) { fin = true; if (done) done(); } };
+    a.onended = end; a.onerror = () => resolve(false);
+    a.onplaying = () => { resolve(true); setTimeout(end, 60000); };   // đề phòng không nhận được sự kiện "phát xong"
+    a.play().catch(() => resolve(false));
+  });
+}
+async function speak(text, done) {
+  stopAudio();
+  const region = $('voice').value;
+  if (region != 'sys') {
+    try { const key = await keyOf(text); for (const ext of ['mp3', 'wav']) if (await playFile(`./audio/${region}-${$('gender').value}/${key}.${ext}`, done)) return; } catch (e) {}
+  }
+  speakSystem(text, done);   // chưa có file audio: dùng giọng đọc của trình duyệt
+}
+function startSpeaking() {
+  state = 'waiting'; timer = TIMING.base + TIMING.perWord * exp.length; lastSec = -1;
+  listen();
+}
+function fail(flags, why) {
+  stopRec(); st = flags; paint(flags, true); $('play').disabled = false;
+  if (practiceMode) { state = 'failed'; $('retry').hidden = false; $('skip').hidden = false; status(why + ' · Nghe lại rồi thử lại / Listen, then try again', 'err'); }
+  else { state = 'crashing'; status(why, 'err'); }
+}
+function saveBest() { if (!practiceMode && score > best) { best = score; $('best').textContent = best; try { localStorage.setItem('ndn-best', best); } catch (e) {} } }
+function over() {
+  state = 'over'; saveBest();
+  status('Thua rồi! Điểm / Score: ' + score + (score > 0 && score >= best ? ' · Kỷ lục mới / New record!' : '') + ' · Bấm Chơi lại để bắt đầu từ đầu', 'err');
+  $('go').textContent = 'Chơi lại / Play again'; $('go').disabled = false; $('pack').disabled = false; $('lvl').disabled = false; $('rename').disabled = false;
+  finishRun();
+}
+function begin() {
+  if (!pool().length) { note('Chưa có câu nào cho chủ đề này. / No sentences for this topic.'); $('go').disabled = false; return; }
+  practiceMode = $('lvl').value == 'practice'; score = 0; $('score').textContent = 0; off = 0; made = 0; used = new Set(); state = 'walking';
+  obs = [{x: W - 110, s: nextS()}]; cur = obs[0].s; render();
+  status('Chuẩn bị… / Get ready…');
+  $('go').disabled = false; $('go').textContent = 'Dừng / Stop'; $('pack').disabled = true; $('lvl').disabled = true; $('rename').disabled = true;
+}
+function stopGame() {
+  stopRec(); stopAudio(); state = 'idle'; obs = [];
+  $('go').textContent = 'Bắt đầu / Start'; $('go').disabled = false; $('pack').disabled = false; $('lvl').disabled = false; $('rename').disabled = false;
+  $('play').disabled = true; $('retry').hidden = true; $('skip').hidden = true; $('stg').textContent = '';
+  status('Đã dừng. Bấm Bắt đầu để chơi lại / Stopped. Press Start to play again.');
+}
+
+function update(dt) {
+  if (state == 'walking' || state == 'jumping' || state == 'crashing') {
+    const d = SPEED * dt; off = (off + d) % 40; obs.forEach(o => o.x -= d);
+  }
+  if (state == 'walking' && obs[0].x - (HX + 27) <= STOP) {
+    obs[0].x = HX + 27 + STOP;
+    if (practiceMode) { state = 'hearing'; status('Nghe mẫu… / Listen…', 'on'); speak(cur.v, () => { if (state == 'hearing') startSpeaking(); }); }
+    else startSpeaking();
+  } else if (state == 'waiting') {
+    timer -= dt; const sec = Math.ceil(timer);
+    if (sec !== lastSec) { lastSec = sec; status('Nói câu này! / Say it now! · ' + sec + 's', 'on'); }
+    if (timer <= 0) fail(st.map(() => 0), 'Hết giờ / Time’s up');
+  } else if (state == 'jumping') {
+    jt += dt; if (jt >= JT) { obs.shift();
+    state = 'walking'; cur = obs[0].s; render(); status('Chuẩn bị… / Get ready…'); }
+  } else if (state == 'crashing' && obs[0].x <= HX + 12) over();
+}
+
+function drawHat() {
+  const hy = state == 'jumping' ? -JH * Math.sin(Math.PI * jt / JT) : 0, dead = state == 'over';
+  ctx.fillStyle = 'rgba(18,51,47,.12)';
+  ctx.beginPath(); ctx.ellipse(HX, GY + 3, 22 - hy / 8 * -1 * 0.3, 3, 0, 0, 7); ctx.fill();
+  ctx.save(); ctx.translate(HX, GY - 6 + hy); if (dead) ctx.rotate(-0.35);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = '#4a3a17'; ctx.lineJoin = 'round';
+  ctx.fillStyle = '#b8892c'; ctx.beginPath(); ctx.ellipse(0, 0, 27, 4, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = state == 'crashing' || dead ? '#e8c982' : '#e9bf5e';
+  ctx.beginPath(); ctx.moveTo(-27, 0); ctx.lineTo(0, -26); ctx.lineTo(27, 0); ctx.quadraticCurveTo(0, 5, -27, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.lineWidth = .8; ctx.strokeStyle = 'rgba(74,58,23,.3)';
+  for (const e of [-16, -8, 0, 8, 16]) { ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(e, 1); ctx.stroke(); }
+  ctx.fillStyle = '#3a2d10';
+  if (dead || state == 'crashing') { ctx.fillRect(-7, -2, 4, 1.5); ctx.fillRect(3, -2, 4, 1.5); }
+  else { ctx.fillRect(-7, -3, 3, 3); ctx.fillRect(4, -3, 3, 3); }
+  ctx.restore();
+}
+function drawPole(x) {
+  ctx.fillStyle = '#8a9a97'; ctx.fillRect(x + 9, GY - POLE, 6, POLE + 3);
+  ctx.fillStyle = '#4c5f5b'; ctx.fillRect(x, GY - POLE + 6, 24, 4);
+  ctx.fillRect(x + 3, GY - POLE + 1, 2, 6); ctx.fillRect(x + 19, GY - POLE + 1, 2, 6);
+  ctx.fillStyle = '#c7a56a'; ctx.fillRect(x + 8, GY - 26, 8, 11);
+}
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#c9ddda'; ctx.fillRect(0, GY + 3, W, H - GY - 3);
+  ctx.fillStyle = '#9db8b4'; ctx.fillRect(0, GY + 3, W, 2);
+  ctx.fillStyle = '#f7fbfa'; for (let x = -off; x < W; x += 40) ctx.fillRect(x, GY + 26, 18, 3);
+  obs.forEach(o => drawPole(o.x));
+  drawHat();
+}
+function frame(t) {
+  const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
+  update(dt); draw(); requestAnimationFrame(frame);
+}
+
+// ===== TÊN NGƯỜI CHƠI VÀ BẢNG XẾP HẠNG =====
+let playerName = '';   // không lưu lại: mỗi lần mở trang đều hỏi tên mới
+function askName() {
+  $('nameInput').value = playerName; $('nameInput').className = '';
+  $('nameModal').hidden = false; $('app').inert = true; setTimeout(() => $('nameInput').focus(), 50);
+}
+function setName() {
+  const n = $('nameInput').value.replace(/[\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 30);
+  if (!n) { $('nameInput').className = 'bad'; $('nameInput').focus(); return; }
+  playerName = n; $('hello').textContent = 'Xin chào, ' + n + ' · Hello, ' + n;
+  $('nameModal').hidden = true; $('app').inert = false;
+}
+async function dash(params) {   // gọi Google Apps Script (ghi điểm hoặc lấy bảng xếp hạng); lỗi thì trả về null
+  if (!DASHBOARD_URL) return null;
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const r = await fetch(DASHBOARD_URL + (DASHBOARD_URL.includes('?') ? '&' : '?') + new URLSearchParams(params), {signal: ctl.signal});
+    const d = await r.json(); return d && d.ok ? d : null;
+  } catch (e) { return null; } finally { clearTimeout(t); }
+}
+const el = (tag, cls, text) => Object.assign(document.createElement(tag), {className: cls || '', textContent: text ?? ''});
+const fmt = n => Number(n).toLocaleString('vi-VN');
+const initial = n => ((n || '?').trim()[0] || '?').toUpperCase();
+function lbRow(e, extra) {
+  const r = el('div', 'lb-row r' + e.rank + (extra ? ' ' + extra : ''));
+  r.append(el('span', 'rk', e.rank + '.'), el('span', 'av', initial(e.name)), el('span', 'nm', e.label || e.name), el('span', 'sc', fmt(e.score)));
+  return r;
+}
+function showBoard(msgText) {
+  $('lbBody').replaceChildren(el('p', '', msgText)); $('lbModal').hidden = false; $('app').inert = true; $('lbClose').focus();
+}
+function closeBoard() { $('lbModal').hidden = true; $('app').inert = false; }
+function renderBoard(d, mine) {
+  if (!d) { $('lbBody').replaceChildren(el('p', '', 'Chưa kết nối được bảng xếp hạng. / Could not reach the leaderboard.' + (mine ? ` Điểm của bạn / Your score: ${fmt(mine.score)}` : ''))); return; }
+  const top = d.top.slice(0, TOP_N), parts = [];
+  if (!top.length) parts.push(el('p', '', 'Chưa có ai trên bảng xếp hạng. / No scores yet.'));
+  else {
+    const pod = el('div', 'podium');
+    [1, 0, 2].forEach(i => {
+      const e = top[i]; if (!e) return;
+      const p = el('div', 'pod p' + (i + 1)); p.append(el('div', 'av', initial(e.name)), el('span', 'medal', String(i + 1)), el('span', 'pn', e.name)); pod.append(p);
+    });
+    parts.push(pod);
+  }
+  const outside = mine && mine.rank > TOP_N;
+  top.forEach((e, i) => parts.push(lbRow(e, (outside && i == top.length - 1 ? 'fade' : '') + (mine && !outside && mine.rank == e.rank ? ' me' : ''))));
+  if (outside) { parts.push(el('div', 'dots', '• • •')); parts.push(lbRow({...mine, label: mine.name + ' (Bạn / You)'}, 'me')); }
+  $('lbBody').replaceChildren(...parts);
+}
+async function openBoard() {
+  showBoard('Đang tải… / Loading…');
+  renderBoard(await dash({action: 'top'}), null);
+}
+async function finishRun() {   // ghi điểm của lượt Thử thách vừa kết thúc rồi hiện bảng xếp hạng
+  if (practiceMode || score < 1 || !DASHBOARD_URL) return;
+  showBoard('Đang ghi điểm… / Saving your score…');
+  const d = await dash({action: 'submit', name: playerName, score});
+  renderBoard(d, d && d.me ? d.me : {name: playerName, score});
+}
+
+// ===== SỰ KIỆN =====
+$('go').onclick = async () => {
+  if (['walking', 'hearing', 'waiting', 'jumping', 'crashing', 'failed'].includes(state)) { stopGame(); return; }
+  $('go').disabled = true; note('');
+  try {
+    if (!recog) {
+      status('Đang tải mô hình nhận giọng (lần đầu ~34 MB)… / Loading the speech model…');
+      ort.env.wasm.numThreads = 1;
+      recog = await Recognizer.create(ort, loadFile, {scale: 1});
+    }
+    if (!micCtx) { status('Hãy cho phép micro / Please allow the microphone'); await initAudio(); }
+  } catch (e) {
+    console.error(e); status('Bấm Bắt đầu để chơi / Press Start'); $('go').disabled = false;
+    note('Lỗi: ' + (e.message || e) + ' — Hãy mở bằng https hoặc localhost và cho phép micro. / Open via https or localhost and allow the microphone.');
+    return;
+  }
+  begin();
+};
+$('play').onclick = () => { if (cur) speak(cur.v); };
+$('retry').onclick = () => { if (state != 'failed') return; stopAudio(); render(); startSpeaking(); };
+$('skip').onclick = () => { if (state != 'failed') return; stopAudio(); succeed(true); };
+if (window.speechSynthesis) speechSynthesis.getVoices();
+$('pack').onchange = () => { deck = []; };
+$('tone').onchange = () => { if (cur) render(); };
+$('nameOk').onclick = setName; $('nameInput').onkeydown = e => { if (e.key == 'Enter') setName(); };
+$('rename').onclick = askName; $('lbBtn').onclick = openBoard; $('lbBtn').hidden = !DASHBOARD_URL;
+$('lbClose').onclick = closeBoard; $('lbModal').onclick = e => { if (e.target === $('lbModal')) closeBoard(); };
+document.addEventListener('keydown', e => { if (e.key == 'Escape' && !$('lbModal').hidden) closeBoard(); });
+for (const id of ['voice', 'gender']) {   // nhớ lựa chọn giọng của người học
+  try { const v = localStorage.getItem('ndn-' + id); if (v) $(id).value = v; } catch (e) {}
+  $(id).onchange = () => { $('gender').disabled = $('voice').value == 'sys'; try { localStorage.setItem('ndn-' + id, $(id).value); } catch (e) {} };
+}
+$('gender').disabled = $('voice').value == 'sys';
+
+askName();
+if (!window.AudioContext || !window.WebAssembly || !navigator.mediaDevices) { note('Trình duyệt không hỗ trợ. Hãy dùng Chrome hoặc Edge mới. / Please use a recent Chrome or Edge.'); $('go').disabled = true; }
+loadSheet().then(() => {
+  cur = {v: 'Xin chào', en: 'Hello'}; render(); requestAnimationFrame(frame);
+  if (!Object.keys(PACKS).length) { $('go').disabled = true; if ($('msg').hidden) note('Chưa đọc được câu nào từ Google Sheet. / No sentences loaded from the Google Sheet.'); }
+});
+</script>
+</body>
+</html>
