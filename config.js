@@ -8,7 +8,7 @@ export const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1JHK1GFetL5xZch
 
 // 2) Link "Web app" của Google Apps Script để ghi và đọc bảng xếp hạng (xem HUONG_DAN.md, phần 2).
 //    Để trống thì game vẫn chạy bình thường nhưng không có bảng xếp hạng.
-export const DASHBOARD_URL = '';
+export const DASHBOARD_URL = 'https://script.google.com/macros/s/AKfycbyGSw5bZRYEtgnLxwPVI7aAiPA_awDgehmgPl0X2hdKFh9haClO_3fBg7GY8f7zBP6R/exec';
 
 // 3) Bảng xếp hạng hiển thị bao nhiêu người đứng đầu.
 export const TOP_N = 5;
